@@ -86,11 +86,17 @@ def main():
                 else:
                     user_input += event.unicode
 
-        # 描画処理
+        # 描画処理(中央に表示)
         text_q = font.render(f"question:{question}", True, (255,255,255))
         text_a = font.render(f"answer:{user_input}", True, (0, 255, 0))
-        screen.blit(text_q, (20, 100))
-        screen.blit(text_a, (20, 200))
+        
+        # 中央に表示する為の位置計算
+        text_q_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3))
+        text_a_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 80))
+
+        # 描画
+        screen.blit(text_q, text_q_rect)
+        screen.blit(text_a, text_a_rect)
 
         pygame.display.update()
         clock.tick(60)
