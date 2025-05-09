@@ -6,6 +6,12 @@ from enum import Enum
 import pygame
 from pygame.locals import *
 
+# ----------------------------
+# グローバル変数
+# ----------------------------
+feedback_text = ""
+feedback_time = 0
+
 class GameState(Enum):
     TITLE = 1
     PLAYING = 2
@@ -27,6 +33,7 @@ FONT_SIZE = 55
 PLAYER_SIZE = (32, 32)
 WORD_LIST = ["SELECT", "FROM", "WHERE", "JOIN", "UPDATE"]
 TIME_LIMIT = 10
+FEEDBACK_DURATION = 1000
 
 # ----------------------------
 # プレイヤー画像の取得
@@ -51,6 +58,23 @@ def init_game():
     font = pygame.font.Font(None, FONT_SIZE)
     return screen, font, clock
 
+# ----------------------------
+# フィードバック処理
+# ----------------------------
+def set_feedback(text):
+    global feedback_text, feedback_time
+    feedback_text = text
+    feedback_time = pygame.time.get_ticks()
+
+# ----------------------------
+# フィードバックの描画
+# ----------------------------
+def draw_feedback(screen, font, feedback_time):
+    now = pygame.time.get_ticks()
+    if now - feedback_time < FEEDBACK_DURATION:
+        fb_surface = font.render(feedback_text, True, (255,255,0))
+        fb_rect = fb_surface.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 160))
+        screen.blit(fb_surface, fb_rect)
 
 # ----------------------------
 # 開始画面
@@ -170,13 +194,12 @@ def main():
                         user_input = user_input[:-1]
                     elif event.key == K_RETURN:
                         if user_input == question:
-                            print("正解！")
-                            # 新しい問題に切り替え
+                            set_feedback("Correct!")
                             user_input = ""
                             score += 1
                             question = random.choice(WORD_LIST)
                         else:
-                            print("不正解")
+                            set_feedback("Wrong!")
                     else:
                         user_input += event.unicode
 
@@ -200,6 +223,14 @@ def main():
             text_s_rect = text_s.get_rect(topright=(SCREEN_SIZE[0] - 10, 55))
             screen.blit(text_t, text_t_rect)
             screen.blit(text_s, text_s_rect)
+
+            draw_feedback(screen, font, feedback_time)
+
+            # now = pygame.time.get_ticks()
+            # if now - feedback_time < FEEDBACK_DURATION:
+            #     fb_surface = font.render(feedback_text, True, (255,255,0))
+            #     fb_rect = fb_surface.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 160))
+            #     screen.blit(fb_surface, fb_rect)
 
             if elapsed >= TIME_LIMIT:
                 game_state = GameState.RESULT
