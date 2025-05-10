@@ -6,16 +6,30 @@ from enum import Enum
 import pygame
 from pygame.locals import *
 
-# ----------------------------
-# グローバル変数
-# ----------------------------
-feedback_text = ""
-feedback_time = 0
-
 class GameState(Enum):
     TITLE = 1
     PLAYING = 2
     RESULT = 3
+
+class GameStatus:
+    def __init__(self):
+        self.score = 0
+        self.user_input = ""
+        self.question = ""
+        self.feedback_text = ""
+        self.feedback_time = 0
+
+    def reset(self):
+        self.score = 0
+        self.user_input = ""
+        self.question = random.choice(WORD_LIST)
+        self.feedback_text = ""
+        self.feedback_time = 0
+
+    def set_feedback(self, text):
+        """フィードバックメッセージ（正誤）と、その表示開始時刻を設定する"""
+        self.feedback_text = text
+        self.feedback_time = pygame.time.get_ticks()
 
 # ----------------------------
 # 環境設定
@@ -59,20 +73,12 @@ def init_game():
     return screen, font, clock
 
 # ----------------------------
-# フィードバック処理
-# ----------------------------
-def set_feedback(text):
-    global feedback_text, feedback_time
-    feedback_text = text
-    feedback_time = pygame.time.get_ticks()
-
-# ----------------------------
 # フィードバックの描画
 # ----------------------------
-def draw_feedback(screen, font, feedback_time):
+def draw_feedback(screen, font, status):
     now = pygame.time.get_ticks()
-    if now - feedback_time < FEEDBACK_DURATION:
-        fb_surface = font.render(feedback_text, True, (255,255,0))
+    if now - status.feedback_time < FEEDBACK_DURATION:
+        fb_surface = font.render(status.feedback_text, True, (255,255,0))
         fb_rect = fb_surface.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 160))
         screen.blit(fb_surface, fb_rect)
 
@@ -151,17 +157,13 @@ def show_result(screen, font, score):
 # メインループ
 # ----------------------------
 def main():
+    status = GameStatus()
+    
+    #ゲーム初期化
     screen, font , clock = init_game()
     player, player_rect = load_player()
-
-    #変数の初期化
-    score = 0
-    elapsed = 0
+    status.reset()
     game_state = GameState.TITLE
-
-    # 出題と入力変数の設定
-    question = random.choice(WORD_LIST)
-    user_input = ""
 
     running = True  # ループ処理の実行を継続するフラグ
 
@@ -189,58 +191,47 @@ def main():
                     sys.exit()
                 if event.type == KEYDOWN:
                     if DEBUG_MODE:
-                        print(user_input)
+                        print(status.user_input)
                     if event.key == K_BACKSPACE:
-                        user_input = user_input[:-1]
+                        status.user_input = status.user_input[:-1]
                     elif event.key == K_RETURN:
-                        if user_input == question:
-                            set_feedback("Correct!")
-                            user_input = ""
-                            score += 1
-                            question = random.choice(WORD_LIST)
+                        if status.user_input == status.question:
+                            status.set_feedback("Correct!")
+                            status.user_input = ""
+                            status.score += 1
+                            status.question = random.choice(WORD_LIST)
                         else:
-                            set_feedback("Wrong!")
+                            status.set_feedback("Wrong!")
                     else:
-                        user_input += event.unicode
+                        status.user_input += event.unicode
 
-            # 描画処理
-            # 問題文と回答（中央に表示）
-            text_q = font.render(f"question: {question}", True, (255,255,255))
-            text_a = font.render(f"answer: {user_input}", True, (0, 255, 0))
+            # 問題文と回答を中央に表示
+            text_q = font.render(f"question: {status.question}", True, (255,255,255))
+            text_a = font.render(f"answer: {status.user_input}", True, (0, 255, 0))
             # 中央に表示する為の位置計算
             # 入力文字の長さによる表示のブレを防ぐため、回答欄の表示位置は問題文と同じX座標とする
             text_q_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3))
             text_a_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 80))
-            # 描画
             screen.blit(text_q, text_q_rect)
             screen.blit(text_a, text_a_rect)
 
-            # プレイ状況（右上に表示）
-            # 時間とスコア
+            # プレイ状況(時間とスコア)を右上に表示
             text_t = font.render(f"time: {elapsed} / {TIME_LIMIT}", True, (200,200,200))
-            text_s = font.render(f"score: {score}", True, (50,50,200))
+            text_s = font.render(f"score: {status.score}", True, (50,50,200))
             text_t_rect = text_t.get_rect(topright=(SCREEN_SIZE[0] - 10, 10))
             text_s_rect = text_s.get_rect(topright=(SCREEN_SIZE[0] - 10, 55))
             screen.blit(text_t, text_t_rect)
             screen.blit(text_s, text_s_rect)
 
-            draw_feedback(screen, font, feedback_time)
-
-            # now = pygame.time.get_ticks()
-            # if now - feedback_time < FEEDBACK_DURATION:
-            #     fb_surface = font.render(feedback_text, True, (255,255,0))
-            #     fb_rect = fb_surface.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 160))
-            #     screen.blit(fb_surface, fb_rect)
+            draw_feedback(screen, font, status)
 
             if elapsed >= TIME_LIMIT:
                 game_state = GameState.RESULT
 
         elif game_state == GameState.RESULT:
-            if show_result(screen, font, score) == "RETRY":
+            if show_result(screen, font, status.score) == "RETRY":
                 #再スタート処理
-                score = 0
-                user_input = ""
-                question = random.choice(WORD_LIST)
+                status.reset()
                 game_state = GameState.TITLE 
             else:
                 running = False
