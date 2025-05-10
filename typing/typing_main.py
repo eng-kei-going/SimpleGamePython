@@ -16,19 +16,28 @@ class GameStatus:
         self.score = 0
         self.user_input = ""
         self.question = ""
+        self.explanation = ""
+        self.is_correct = True
         self.feedback_text = ""
         self.feedback_time = 0
 
     def reset(self):
         self.score = 0
         self.user_input = ""
-        self.question = random.choice(WORD_LIST)
+        self.set_new_question()
         self.feedback_text = ""
         self.feedback_time = 0
 
-    def set_feedback(self, text):
+    def set_new_question(self):
+        q = random.choice(QUESTION_LIST)
+        self.question = q["question"]
+        self.explanation = q["explanation"]
+
+    def set_feedback(self, text, is_correct):
         """フィードバックメッセージ（正誤）と、その表示開始時刻を設定する"""
         self.feedback_text = text
+        self.user_input = ""
+        self.is_correct = is_correct
         self.feedback_time = pygame.time.get_ticks()
 
 # ----------------------------
@@ -37,17 +46,41 @@ class GameStatus:
 DEBUG_MODE = False
 BASE_DIR = Path(__file__).parent
 PLAYER_IMG_PATH = BASE_DIR / "images" / "enaga.png"
+FONT_PATH = BASE_DIR / "fonts" / "NotoSansJP-Regular.ttf"
 
 # ----------------------------
 # 定数
 # ----------------------------
 SCREEN_SIZE = (1280, 720)
-BG_COLOR = (50,50,50)
-FONT_SIZE = 55
+FONT_SIZE = 48
+EXFONT_SIZE = 32
 PLAYER_SIZE = (32, 32)
-WORD_LIST = ["SELECT", "FROM", "WHERE", "JOIN", "UPDATE"]
-TIME_LIMIT = 10
+TIME_LIMIT = 60
 FEEDBACK_DURATION = 1000
+
+QUESTION_LIST = [
+    {"question": "How are you?", "explanation": "調子はどう？"},
+    {"question": "Nice to meet you.", "explanation": "はじめまして"},
+    {"question": "Can I help you?", "explanation": "お手伝いしましょうか？"},
+    {"question": "I'm looking for...", "explanation": "〜を探しています"},
+    {"question": "It depends on the situation.", "explanation": "状況によります"},
+    {"question": "As far as I know.", "explanation": "私の知る限りでは"},
+    {"question": "I have no idea.", "explanation": "全く分かりません"},
+] 
+
+# ----------------------------
+# 色定数（用途 + コメントに色名）
+# ----------------------------
+COLOR_BACKGROUND = (50, 50, 50)              # dark gray
+COLOR_TEXT_MAIN = (255, 255, 255)            # white
+COLOR_TEXT_SUB = (180, 180, 180)             # light gray
+COLOR_TEXT_TITLE = (100, 200, 255)           # light blue
+COLOR_TEXT_INSTRUCTION = (100, 100, 100)     # gray
+COLOR_TEXT_ANSWER = (0, 255, 0)              # green
+COLOR_TEXT_TIMER = (200, 200, 200)           # gray
+COLOR_TEXT_SCORE = (50, 50, 200)             # blue
+COLOR_FEEDBACK = (255, 255, 0)               # yellow
+COLOR_FEEDBACK_ERROR = (255, 50, 50)         # red
 
 # ----------------------------
 # プレイヤー画像の取得
@@ -69,16 +102,25 @@ def init_game():
     screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
     pygame.display.set_caption("Typing Game")
-    font = pygame.font.Font(None, FONT_SIZE)
-    return screen, font, clock
+    font = pygame.font.Font(str(FONT_PATH), FONT_SIZE)
+    exfont = pygame.font.Font(str(FONT_PATH),EXFONT_SIZE)
+    return screen, font, exfont, clock
 
 # ----------------------------
 # フィードバックの描画
 # ----------------------------
 def draw_feedback(screen, font, status):
+    """タイピング結果に対するフィードバックを描画（正誤に応じ色分け）"""
     now = pygame.time.get_ticks()
     if now - status.feedback_time < FEEDBACK_DURATION:
-        fb_surface = font.render(status.feedback_text, True, (255,255,0))
+
+        # 正誤による色変更
+        if status.is_correct:
+            color = COLOR_FEEDBACK
+        else:
+            color = COLOR_FEEDBACK_ERROR
+
+        fb_surface = font.render(status.feedback_text, True, color)
         fb_rect = fb_surface.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 160))
         screen.blit(fb_surface, fb_rect)
 
@@ -88,11 +130,11 @@ def draw_feedback(screen, font, status):
 def show_title(screen, font):
     title_running = True
     while title_running:
-        screen.fill(BG_COLOR)
+        screen.fill(COLOR_BACKGROUND)
 
         # タイトル表示
-        text1 = font.render("Typing Game", True, (255, 50, 50))
-        text2 = font.render("Press any key to start", True, (100, 100, 100))
+        text1 = font.render("Typing Game", True, COLOR_TEXT_TITLE)
+        text2 = font.render("Press any key to start", True, COLOR_TEXT_INSTRUCTION)
 
         # 位置調整（中央に表示）
         text1_rect = text1.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3))
@@ -117,15 +159,15 @@ def show_title(screen, font):
 # スコアを表示する
 # ----------------------------
 def show_result(screen, font, score):
-    wait_ticks = pygame.time.get_ticks() + 300
+    wait_ticks = pygame.time.get_ticks() + 1000
     result_running = True
     while result_running:
-        screen.fill(BG_COLOR)
+        screen.fill(COLOR_BACKGROUND)
 
         # メッセージ表示
-        text1 = font.render("TIME UP!", True, (255, 50, 50))
-        text2 = font.render(f"Your Score: {score}", True, (255, 255, 255))
-        text3 = font.render("Press any key to exit", True, (100, 100, 100))
+        text1 = font.render("TIME UP!", True, COLOR_FEEDBACK_ERROR)
+        text2 = font.render(f"Your Score: {score}", True, COLOR_TEXT_MAIN)
+        text3 = font.render("Press any key to exit  (R: Retry)", True, COLOR_TEXT_INSTRUCTION)
 
         # 位置調整（中央に表示）
         text1_rect = text1.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3))
@@ -158,9 +200,14 @@ def show_result(screen, font, score):
 # ----------------------------
 def main():
     status = GameStatus()
+
+    def handle_correct_answer():
+        status.set_feedback("Correct!", True)
+        status.score += 1
+        status.set_new_question()
     
     #ゲーム初期化
-    screen, font , clock = init_game()
+    screen, font, exfont, clock = init_game()
     player, player_rect = load_player()
     status.reset()
     game_state = GameState.TITLE
@@ -179,7 +226,7 @@ def main():
             elapsed = (pygame.time.get_ticks() - start_time) // 1000
 
             # #画面の背景色を変更する
-            screen.fill(BG_COLOR)
+            screen.fill(COLOR_BACKGROUND)
             # キャラクターの表示
             screen.blit(player, player_rect)
 
@@ -196,28 +243,28 @@ def main():
                         status.user_input = status.user_input[:-1]
                     elif event.key == K_RETURN:
                         if status.user_input == status.question:
-                            status.set_feedback("Correct!")
-                            status.user_input = ""
-                            status.score += 1
-                            status.question = random.choice(WORD_LIST)
+                            handle_correct_answer()
                         else:
-                            status.set_feedback("Wrong!")
+                            status.set_feedback("Wrong!", False)
                     else:
                         status.user_input += event.unicode
 
             # 問題文と回答を中央に表示
-            text_q = font.render(f"question: {status.question}", True, (255,255,255))
-            text_a = font.render(f"answer: {status.user_input}", True, (0, 255, 0))
+            text_q = font.render(f"Q: {status.question}", True, COLOR_TEXT_MAIN)
+            text_ex = exfont.render(f" {status.explanation}", True, COLOR_TEXT_SUB)
+            text_a = font.render(f"A: {status.user_input}", True, COLOR_TEXT_ANSWER)
             # 中央に表示する為の位置計算
             # 入力文字の長さによる表示のブレを防ぐため、回答欄の表示位置は問題文と同じX座標とする
             text_q_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3))
-            text_a_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 80))
+            text_ex_rect = text_ex.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 50))
+            text_a_rect = text_q.get_rect(center=(SCREEN_SIZE[0] // 2, SCREEN_SIZE[1] // 3 + 100))
             screen.blit(text_q, text_q_rect)
+            screen.blit(text_ex, text_ex_rect)
             screen.blit(text_a, text_a_rect)
 
             # プレイ状況(時間とスコア)を右上に表示
-            text_t = font.render(f"time: {elapsed} / {TIME_LIMIT}", True, (200,200,200))
-            text_s = font.render(f"score: {status.score}", True, (50,50,200))
+            text_t = font.render(f"time: {elapsed} / {TIME_LIMIT}", True, COLOR_TEXT_TIMER)
+            text_s = font.render(f"score: {status.score}", True, COLOR_TEXT_SCORE)
             text_t_rect = text_t.get_rect(topright=(SCREEN_SIZE[0] - 10, 10))
             text_s_rect = text_s.get_rect(topright=(SCREEN_SIZE[0] - 10, 55))
             screen.blit(text_t, text_t_rect)
