@@ -1,0 +1,142 @@
+[
+  {
+    "id": "E001",
+    "question": "apple",
+    "answer": "apple",
+    "explanation": "リンゴ。果物の一種。",
+    "domain": "英語",
+    "source": "英単語",
+    "level": "A1",
+    "tags": [
+      "名詞",
+      "果物",
+      "単語"
+    ]
+  },
+  {
+    "id": "E002",
+    "question": "run",
+    "answer": "run",
+    "explanation": "走るという意味の動詞。",
+    "domain": "英語",
+    "source": "英単語",
+    "level": "A1",
+    "tags": [
+      "動詞",
+      "行動",
+      "単語"
+    ]
+  },
+  {
+    "id": "E003",
+    "question": "book",
+    "answer": "book",
+    "explanation": "本。読むためのもの。",
+    "domain": "英語",
+    "source": "英単語",
+    "level": "A1",
+    "tags": [
+      "名詞",
+      "日常",
+      "単語"
+    ]
+  },
+  {
+    "id": "E004",
+    "question": "eat",
+    "answer": "eat",
+    "explanation": "食べるという意味の動詞。",
+    "domain": "英語",
+    "source": "英単語",
+    "level": "A1",
+    "tags": [
+      "動詞",
+      "食事",
+      "単語"
+    ]
+  },
+  {
+    "id": "E005",
+    "question": "school",
+    "answer": "school",
+    "explanation": "学校。勉強する場所。",
+    "domain": "英語",
+    "source": "英単語",
+    "level": "A1",
+    "tags": [
+      "名詞",
+      "教育",
+      "単語"
+    ]
+  },
+  {
+    "id": "C001",
+    "question": "How are you?",
+    "answer": "How are you?",
+    "explanation": "調子はどう？という定番のあいさつ。",
+    "domain": "英語",
+    "source": "チャンク",
+    "level": "A1",
+    "tags": [
+      "挨拶",
+      "日常会話",
+      "フレーズ"
+    ]
+  },
+  {
+    "id": "C002",
+    "question": "Nice to meet you.",
+    "answer": "Nice to meet you.",
+    "explanation": "はじめまして、の意味。",
+    "domain": "英語",
+    "source": "チャンク",
+    "level": "A1",
+    "tags": [
+      "挨拶",
+      "初対面",
+      "フレーズ"
+    ]
+  },
+  {
+    "id": "C003",
+    "question": "Can I help you?",
+    "answer": "Can I help you?",
+    "explanation": "何かお手伝いしましょうか？",
+    "domain": "英語",
+    "source": "チャンク",
+    "level": "A1",
+    "tags": [
+      "店",
+      "サービス",
+      "フレーズ"
+    ]
+  },
+  {
+    "id": "C004",
+    "question": "I'm looking for...",
+    "answer": "I'm looking for...",
+    "explanation": "〜を探しています。",
+    "domain": "英語",
+    "source": "チャンク",
+    "level": "A2",
+    "tags": [
+      "買い物",
+      "質問",
+      "フレーズ"
+    ]
+  },
+  {
+    "id": "C005",
+    "question": "I have no idea.",
+    "answer": "I have no idea.",
+    "explanation": "全くわかりません。",
+    "domain": "英語",
+    "source": "チャンク",
+    "level": "A2",
+    "tags": [
+      "否定",
+      "応答",
+      "フレーズ"
+    ]
+  }
+]

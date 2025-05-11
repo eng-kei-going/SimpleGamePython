@@ -1,5 +1,6 @@
 import sys
 import random
+import json
 from pathlib import Path
 from enum import Enum
 
@@ -47,6 +48,11 @@ DEBUG_MODE = False
 BASE_DIR = Path(__file__).parent
 PLAYER_IMG_PATH = BASE_DIR / "images" / "enaga.png"
 FONT_PATH = BASE_DIR / "fonts" / "NotoSansJP-Regular.ttf"
+QUESTION_JSON_PATH = BASE_DIR / "data" / "questions.json"
+
+def load_questions_from_json(filepath):
+    with open(str(filepath), encoding="utf-8") as f:
+        return json.load(f)
 
 # ----------------------------
 # 定数
@@ -58,15 +64,7 @@ PLAYER_SIZE = (32, 32)
 TIME_LIMIT = 60
 FEEDBACK_DURATION = 1000
 
-QUESTION_LIST = [
-    {"question": "How are you?", "explanation": "調子はどう？"},
-    {"question": "Nice to meet you.", "explanation": "はじめまして"},
-    {"question": "Can I help you?", "explanation": "お手伝いしましょうか？"},
-    {"question": "I'm looking for...", "explanation": "〜を探しています"},
-    {"question": "It depends on the situation.", "explanation": "状況によります"},
-    {"question": "As far as I know.", "explanation": "私の知る限りでは"},
-    {"question": "I have no idea.", "explanation": "全く分かりません"},
-] 
+QUESTION_LIST = load_questions_from_json(QUESTION_JSON_PATH)
 
 # ----------------------------
 # 色定数（用途 + コメントに色名）
